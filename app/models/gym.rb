@@ -34,10 +34,18 @@ class Trainer
 
     attr_reader :name
 
+    @@all = []
+
     def initialize(name)
         @name = name
-        
+        @@all << self
     end
+
+    #Class Method
+    def self.all
+        @@all
+    end
+
 
     def self.most_clients
         prolific_trainer_hash = {}
@@ -66,10 +74,23 @@ class Trainer
 
     end
 
-    def clients
-        Client.all.select{ |cli| cli.trainer == self }.length
+    def self.most_clients_two
+        self.all.max { |a, b| a.clients.length <=> b.clients.length }
     end
 
+
+    def clients
+        Client.all.select{ |cli| cli.trainer == self }
+    end
+
+    def client_count
+        self.clients.length
+    end
+
+
+    def sign_up_for_gym(location)
+        TrainerLocation.new(self, location)
+    end
 
 
 end
@@ -78,12 +99,23 @@ class Location
 
     attr_reader :name
 
+    @@all = []
+
     def initialize(name)
         @name = name
+        @@all << self
     end
+
+    # Class Method
+
+    def self.all
+        @@all
+    end
+
 
     def self.least_clients
 
+        self.all.min { |a, b| a.clients_at_location <=> b.clients_at_location }
 
         # trainer > number of clients
 
@@ -95,12 +127,23 @@ class Location
 
     end
 
+    # Instance Methods
+
+    def clients_at_location
+        self.get_trainers.map { |trainer| trainer.client_count }.sum
+    end
+
+
     def get_trainers
 
         TrainerLocation.all.select { |tl| tl.location == self }.map { |tl| tl.trainer }
 
     end
 
+
+    def add_new_trainer(trainer)
+        TrainerLocation.new(trainer, self)
+    end
 
 
 end
@@ -135,6 +178,17 @@ dave = Client.new("Dave")
 jim = Trainer.new("Jim")
 terry = Trainer.new("Terry")
 
+#location instances
+dc = Location.new("Washington D.C.")
+bmore = Location.new("Baltimore")
+barca = Location.new("Barcelona")
+
+#add trainers to locations
+dc.add_new_trainer(jim)
+barca.add_new_trainer(terry)
+bmore.add_new_trainer(jim)
+
+
 #trainer assignments
 bob.assign_trainer(jim)
 mary.assign_trainer(jim)
@@ -142,8 +196,15 @@ paul.assign_trainer(jim)
 dave.assign_trainer(terry)
 
 
+
 # puts Client.all.map {|cli| cli.trainer }
 
 # puts Trainer.most_clients.name
 
-puts jim.clients
+puts Location.least_clients.name
+
+# puts dc.clients_at_location
+# puts bmore.clients_at_location
+# puts barca.clients_at_location
+
+# puts jim.clients
