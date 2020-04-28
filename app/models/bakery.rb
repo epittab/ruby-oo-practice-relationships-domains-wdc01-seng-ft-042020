@@ -68,8 +68,6 @@ class Desserts
         return total_calories
     end
 
-
-
 end
 
 class Ingredients
